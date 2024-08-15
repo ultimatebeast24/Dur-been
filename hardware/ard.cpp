@@ -5,7 +5,7 @@
 const char* ssid = "your_SSID";           // Replace with your Wi-Fi SSID
 const char* password = "your_PASSWORD";   // Replace with your Wi-Fi password
 
-const char* serverName = "http://your-server-ip:your-port/endpoint"; // Replace with your Node.js server URL
+const char* serverName = "http://192.168.102.119:3000/endpoint"; // Replace <Your_Computer_IP> with the actual IP address
 
 #define TRIG_PIN 9
 #define ECHO_PIN 10
