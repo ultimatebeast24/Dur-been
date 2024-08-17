@@ -22,11 +22,12 @@ const trashCanIcon = new L.DivIcon({
 
 // Initial bin locations with levels
 const locations = [
-  { lat: 23.414411, lng: 85.441424, name: "Mesra", level: 0.8 },
-  { lat: 23.417, lng: 85.442, name: "Hostel 1", level: 0.5 },
-  { lat: 23.416, lng: 85.438, name: "Hostel 2", level: 0.7 },
-  { lat: 23.415, lng: 85.444, name: "Hostel 3", level: 0.9 },
-  { lat: 23.413, lng: 85.439, name: "Hostel 4", level: 0.4 },
+  { lat: 23.419244857203218, lng: 85.43539749670185, name: "Hostel 10", level: 0.8},
+  { lat: 23.422646804286135, lng: 85.43834569973096, name: "Auditorium", level: 0.5},
+  { lat: 23.4152917041073, lng: 85.44060449470813, name: "Chicago", level: 0.7 },
+  { lat: 23.417547922834785, lng: 85.4412739565754, name: "Jungle", level: 0.3 },
+  { lat: 23.414725745050873, lng: 85.43848075231287, name: "circle", level: 0.9 },
+  { lat: 23.414411, lng: 85.441424, name: "Mesra", level: 0.2 },
 ];
 
 const RoutingMachine = ({ waypoints }) => {
@@ -80,25 +81,38 @@ const MapComponent = () => {
     }
   };
 
-  // Function to calculate best path considering bin levels
+  // Function to calculate the optimal path using a TSP approach
   const calculateOptimalPath = (startLocation) => {
-    // Sort bins based on distance and level
-    const sortedBins = locations
-      .slice() // Make a copy of locations
-      .sort((a, b) => {
-        const distA = getDistance(startLocation, a);
-        const distB = getDistance(startLocation, b);
-        return distA - distB || b.level - a.level; // Sort by distance, then level
-      });
+    const locationsWithStart = [{ ...startLocation, name: "Start" }, ...locations];
+    const numBins = locationsWithStart.length;
+    const visited = Array(numBins).fill(false);
+    const path = [L.latLng(startLocation.lat, startLocation.lng)];
+    let currentLocation = locationsWithStart[0];
+    visited[0] = true;
 
-    // Generate waypoints in the sorted order
-    const waypoints = [L.latLng(startLocation.lat, startLocation.lng)];
-    sortedBins.forEach((bin) => {
-      waypoints.push(L.latLng(bin.lat, bin.lng));
-    });
-    waypoints.push(L.latLng(startLocation.lat, startLocation.lng)); // Return to start
+    for (let i = 1; i < numBins; i++) {
+      let nearestNeighbor = null;
+      let nearestDist = Infinity;
+      for (let j = 1; j < numBins; j++) {
+        if (!visited[j]) {
+          const dist = getDistance(currentLocation, locationsWithStart[j]);
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestNeighbor = locationsWithStart[j];
+          }
+        }
+      }
+      if (nearestNeighbor) {
+        visited[locationsWithStart.indexOf(nearestNeighbor)] = true;
+        path.push(L.latLng(nearestNeighbor.lat, nearestNeighbor.lng));
+        currentLocation = nearestNeighbor;
+      }
+    }
 
-    return waypoints;
+    // Return to start
+    path.push(L.latLng(startLocation.lat, startLocation.lng));
+
+    return path;
   };
 
   // Helper function to calculate the distance between two points (Haversine formula)
