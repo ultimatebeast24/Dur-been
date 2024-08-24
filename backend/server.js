@@ -1,13 +1,18 @@
-const express = require('express');
-const app = express();
+const { SerialPort } = require("serialport");
+const { ReadlineParser } = require("@serialport/parser-readline");
 
-app.get('/endpoint', (req, res) => {
-  const distance = req.query.distance;
-  console.log(`Received distance: ${distance} cm`);
-  res.send(`Distance received: ${distance} cm`);
+const port = new SerialPort({ path: "COM5", baudRate: 9600 });
+
+const parser = port.pipe(new ReadlineParser({ delimiter: "\r\n" }));
+
+port.on("open", () => {
+  console.log("Serial Port Opened");
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+parser.on("data", (data) => {
+  console.log("Received Data:", data);
+});
+
+port.on("error", (err) => {
+  console.error("Error: ", err.message);
 });
