@@ -41,21 +41,34 @@ const RoutingMachine = ({ waypoints }) => {
       showAlternatives: false,
       fitSelectedRoutes: true,
       lineOptions: {
-        styles: [{ color: "#6FA1EC", weight: 4 }]
+        styles: [{ color: "#6FA1EC", weight: 4 }],
       },
-      createMarker: function() { return null; } // Don't create markers for waypoints
+      createMarker: function () {
+        return null;
+      }, // Don't create markers for waypoints
     }).addTo(map);
 
     // Add arrows to the route
-    routingControl.on('routesfound', function(e) {
+    routingControl.on("routesfound", function (e) {
       const routes = e.routes;
       if (routes.length > 0) {
         const route = routes[0];
-        const line = L.polyline(route.coordinates, { color: '#6FA1EC', weight: 4 }).addTo(map);
+        const line = L.polyline(route.coordinates, {
+          color: "#6FA1EC",
+          weight: 4,
+        }).addTo(map);
         L.polylineDecorator(line, {
           patterns: [
-            { offset: 12, repeat: 25, symbol: L.Symbol.arrowHead({ pixelSize: 15, polygon: false, pathOptions: { stroke: true, color: '#6FA1EC', weight: 2 } }) }
-          ]
+            {
+              offset: 12,
+              repeat: 25,
+              symbol: L.Symbol.arrowHead({
+                pixelSize: 15,
+                polygon: false,
+                pathOptions: { stroke: true, color: "#6FA1EC", weight: 2 },
+              }),
+            },
+          ],
         }).addTo(map);
       }
     });
@@ -117,37 +130,41 @@ const MapComponent = () => {
   };
 
   return (
-    <>
-      <MapContainer
-        center={[23.414411, 85.441424]}
-        zoom={15}
-        style={{ height: "100vh", width: "100vw" }}
-        ref={mapRef}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        {locations.map((location, index) => (
-          <Marker
-            key={index}
-            position={[location.lat, location.lng]}
-            icon={trashCanIcon}
-          >
-            <Popup>
-              {location.name} (Level: {location.level})
-            </Popup>
-          </Marker>
-        ))}
-        <RoutingMachine waypoints={waypoints} />
-      </MapContainer>
-      <button
-        onClick={handleCalculateRoute}
-        style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}
-      >
-        Calculate Optimal Route
-      </button>
-    </>
+    <div className="flex flex-col h-screen">
+      <div className="flex-1">
+        <MapContainer
+          center={[23.414411, 85.441424]}
+          zoom={15}
+          className="h-full w-full"
+          ref={mapRef}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {locations.map((location, index) => (
+            <Marker
+              key={index}
+              position={[location.lat, location.lng]}
+              icon={trashCanIcon}
+            >
+              <Popup>
+                {location.name} (Level: {location.level})
+              </Popup>
+            </Marker>
+          ))}
+          <RoutingMachine waypoints={waypoints} />
+        </MapContainer>
+      </div>
+      <div className="p-4 bg-white text-center">
+        <button
+          onClick={handleCalculateRoute}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+        >
+          Calculate Optimal Route
+        </button>
+      </div>
+    </div>
   );
 };
 

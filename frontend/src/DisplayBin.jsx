@@ -24,7 +24,6 @@ const DisplayBin = () => {
   const createChartData = (binEntry) => {
     const timestamps = binEntry.data.map(dataPoint => new Date(dataPoint.timestamp).toLocaleString());
     const binLevels = binEntry.data.map(dataPoint => dataPoint.binLevel);
-
     return {
       labels: timestamps,
       datasets: [
@@ -67,15 +66,44 @@ const DisplayBin = () => {
     }
   };
 
-  return (
-    <div>
-      <h2>All Bins Data</h2>
-      {binData.map((binEntry) => (
-        <div key={binEntry.binNumber} style={{ marginBottom: '30px' }}>
-          <h3>Bin {binEntry.binNumber}</h3>
-          <Line data={createChartData(binEntry)} options={options} />
+  const TrashCan = ({ fillLevel }) => {
+    const height = 200;
+    const width = 100;
+    const fillHeight = height * (fillLevel / 100);
+
+    return (
+      <div className="relative" style={{ width, height }}>
+        <div className="absolute bottom-0 w-full bg-gray-300 rounded-t-lg overflow-hidden" style={{ height }}>
+          <div 
+            className="absolute bottom-0 w-full bg-green-500 transition-all duration-500 ease-in-out" 
+            style={{ height: `${fillHeight}px` }}
+          ></div>
         </div>
-      ))}
+        <div className="absolute top-0 left-0 w-full h-full border-4 border-gray-600 rounded-t-lg"></div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">All Bins Data</h2>
+      {binData.map((binEntry) => {
+        const latestLevel = binEntry.data[binEntry.data.length - 1]?.binLevel || 0;
+        return (
+          <div key={binEntry.binNumber} className="mb-8 p-4 bg-white shadow-md rounded-lg">
+            <h3 className="text-xl font-semibold mb-4 text-gray-700">Bin {binEntry.binNumber}</h3>
+            <div className="flex items-center">
+              <div className="w-4/5 mx-0 h-96">
+                <Line data={createChartData(binEntry)} options={options} />
+              </div>
+              <div className="w-1/4 flex flex-col justify-start items-center">
+                <span className="text-lg font-bold mb-2">{latestLevel}%</span>
+                <TrashCan fillLevel={latestLevel} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
