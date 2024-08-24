@@ -97,37 +97,42 @@ const UserMap = () => {
   };
 
   return (
-    <div>
-      <h1>Nearest Bin: {nearestBin ? nearestBin.name : 'Loading...'}</h1>
-      <MapContainer
-        center={userLocation}
-        zoom={15}
-        style={{ height: "100vh", width: "100%" }}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-
-        {userLocation && (
-          <Marker
-            position={[userLocation.lat, userLocation.lng]}
-            icon={L.icon({
-              iconUrl: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-            })}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <h1 className="text-3xl font-bold mb-4 text-gray-800">
+        Nearest Bin: {nearestBin ? nearestBin.name : 'Loading...'}
+      </h1>
+      <div className="w-full h-full">
+        <MapContainer
+          center={userLocation}
+          zoom={15}
+          style={{ height: "80vh", width: "100%" }}
+          className="rounded-lg shadow-lg"
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-        )}
 
-        {bins.map((bin, index) => (
-          <Marker key={index} position={[bin.lat, bin.lng]} icon={trashCanIcon} />
-        ))}
+          {userLocation && (
+            <Marker
+              position={[userLocation.lat, userLocation.lng]}
+              icon={L.icon({
+                iconUrl: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+              })}
+            />
+          )}
 
-        {userLocation && nearestBin && (
-          <Routing userLocation={userLocation} nearestBin={nearestBin} />
-        )}
-      </MapContainer>
+          {bins.map((bin, index) => (
+            <Marker key={index} position={[bin.lat, bin.lng]} icon={trashCanIcon} />
+          ))}
+
+          {userLocation && nearestBin && (
+            <Routing userLocation={userLocation} nearestBin={nearestBin} />
+          )}
+        </MapContainer>
+      </div>
     </div>
   );
 };

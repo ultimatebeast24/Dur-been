@@ -22,11 +22,13 @@ const trashCanIcon = new L.DivIcon({
 
 // Initial bin locations with levels
 const locations = [
-  { lat: 23.414411, lng: 85.441424, name: "Mesra", level: 0.8 },
-  { lat: 23.417, lng: 85.442, name: "Hostel 1", level: 0.5 },
-  { lat: 23.416, lng: 85.438, name: "Hostel 2", level: 0.7 },
-  { lat: 23.415, lng: 85.444, name: "Hostel 3", level: 0.9 },
-  { lat: 23.413, lng: 85.439, name: "Hostel 4", level: 0.4 },
+  { lat: 23.419244857203218, lng: 85.43539749670185, name: "Hostel 10", level: 0.8},
+  { lat: 23.422646804286135, lng: 85.43834569973096, name: "Auditorium", level: 0.5},
+  { lat: 23.4152917041073, lng: 85.44060449470813, name: "Chicago", level: 0.7 },
+  { lat: 23.417547922834785, lng: 85.4412739565754, name: "Jungle", level: 0.1 },
+  { lat: 23.414725745050873, lng: 85.43848075231287, name: "Circle", level: 0.9 },
+  { lat: 23.414411, lng: 85.441424, name: "Mesra", level: 0.2 },
+  { lat: 23.411890267221352, lng: 85.44116424791667, name: "Canteen", level: 0.8 },
 ];
 
 const RoutingMachine = ({ waypoints }) => {
@@ -41,34 +43,21 @@ const RoutingMachine = ({ waypoints }) => {
       showAlternatives: false,
       fitSelectedRoutes: true,
       lineOptions: {
-        styles: [{ color: "#6FA1EC", weight: 4 }],
+        styles: [{ color: "#6FA1EC", weight: 4 }]
       },
-      createMarker: function () {
-        return null;
-      }, // Don't create markers for waypoints
+      createMarker: function() { return null; } // Don't create markers for waypoints
     }).addTo(map);
 
     // Add arrows to the route
-    routingControl.on("routesfound", function (e) {
+    routingControl.on('routesfound', function(e) {
       const routes = e.routes;
       if (routes.length > 0) {
         const route = routes[0];
-        const line = L.polyline(route.coordinates, {
-          color: "#6FA1EC",
-          weight: 4,
-        }).addTo(map);
+        const line = L.polyline(route.coordinates, { color: '#6FA1EC', weight: 4 }).addTo(map);
         L.polylineDecorator(line, {
           patterns: [
-            {
-              offset: 12,
-              repeat: 25,
-              symbol: L.Symbol.arrowHead({
-                pixelSize: 15,
-                polygon: false,
-                pathOptions: { stroke: true, color: "#6FA1EC", weight: 2 },
-              }),
-            },
-          ],
+            { offset: 12, repeat: 25, symbol: L.Symbol.arrowHead({ pixelSize: 15, polygon: false, pathOptions: { stroke: true, color: '#6FA1EC', weight: 2 } }) }
+          ]
         }).addTo(map);
       }
     });
@@ -93,25 +82,38 @@ const MapComponent = () => {
     }
   };
 
-  // Function to calculate best path considering bin levels
+  // Function to calculate the optimal path using a TSP approach
   const calculateOptimalPath = (startLocation) => {
-    // Sort bins based on distance and level
-    const sortedBins = locations
-      .slice() // Make a copy of locations
-      .sort((a, b) => {
-        const distA = getDistance(startLocation, a);
-        const distB = getDistance(startLocation, b);
-        return distA - distB || b.level - a.level; // Sort by distance, then level
-      });
+    const locationsWithStart = [{ ...startLocation, name: "Start" }, ...locations];
+    const numBins = locationsWithStart.length;
+    const visited = Array(numBins).fill(false);
+    const path = [L.latLng(startLocation.lat, startLocation.lng)];
+    let currentLocation = locationsWithStart[0];
+    visited[0] = true;
 
-    // Generate waypoints in the sorted order
-    const waypoints = [L.latLng(startLocation.lat, startLocation.lng)];
-    sortedBins.forEach((bin) => {
-      waypoints.push(L.latLng(bin.lat, bin.lng));
-    });
-    waypoints.push(L.latLng(startLocation.lat, startLocation.lng)); // Return to start
+    for (let i = 1; i < numBins; i++) {
+      let nearestNeighbor = null;
+      let nearestDist = Infinity;
+      for (let j = 1; j < numBins; j++) {
+        if (!visited[j]) {
+          const dist = getDistance(currentLocation, locationsWithStart[j]);
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestNeighbor = locationsWithStart[j];
+          }
+        }
+      }
+      if (nearestNeighbor) {
+        visited[locationsWithStart.indexOf(nearestNeighbor)] = true;
+        path.push(L.latLng(nearestNeighbor.lat, nearestNeighbor.lng));
+        currentLocation = nearestNeighbor;
+      }
+    }
 
-    return waypoints;
+    // Return to start
+    path.push(L.latLng(startLocation.lat, startLocation.lng));
+
+    return path;
   };
 
   // Helper function to calculate the distance between two points (Haversine formula)
@@ -130,12 +132,20 @@ const MapComponent = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-1">
+    <div className="p-4">
+      <div className="mb-4">
+        <button
+          onClick={handleCalculateRoute}
+          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Calculate Optimal Route
+        </button>
+      </div>
+      <div className="h-[calc(100vh-80px)] w-full">
         <MapContainer
           center={[23.414411, 85.441424]}
           zoom={15}
-          className="h-full w-full"
+          style={{ height: "100%", width: "100%" }}
           ref={mapRef}
         >
           <TileLayer
@@ -155,14 +165,6 @@ const MapComponent = () => {
           ))}
           <RoutingMachine waypoints={waypoints} />
         </MapContainer>
-      </div>
-      <div className="p-4 bg-white text-center">
-        <button
-          onClick={handleCalculateRoute}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-        >
-          Calculate Optimal Route
-        </button>
       </div>
     </div>
   );
